@@ -142,10 +142,25 @@ resolve as lacunas spec ↔ contrato e registra as práticas adotadas. Não rest
   de ambiente para `base_url` e `Authorization: Bearer {{token}}`.
 - **Rationale**: cliente HTTP padrão do projeto; mantém exemplos executáveis versionados.
 
-## Resumo de decisões abertas para o usuário
+## D14 — Separação domínio puro × persistência (decisão D1 do `/speckit-analyze`)
 
-| # | Tema | Decisão adotada | Pode reverter para |
-|---|------|-----------------|--------------------|
-| 1 | Concluir/reabrir | `status` opcional no corpo do PATCH | sub-recurso `PATCH /tarefas/{id}/status` |
-| 2 | Prioridade | int `1..3` → ALTA/MÉDIA/BAIXA (1=ALTA) | outro intervalo/mapeamento |
-| 3 | Status | enum {PENDENTE, CONCLUIDA} | incluir "EM_ANDAMENTO" (clarify pendente) |
+- **Decisão**: o modelo de domínio (`service/model`) é composto por POJOs puros, sem anotações
+  de framework. A persistência usa entidades JPA separadas (`service/repository/entity`),
+  acessadas por **portas** de domínio (`TarefaRepository`, `UsuarioRepository`) com
+  **adaptadores** (`repository/impl`) e um *persistence mapper* (MapStruct). Specifications
+  (`CriteriaBuilder`) atuam sobre as entidades JPA na camada de infraestrutura.
+- **Rationale**: cumpre o Princípio I (DDD) da constituição sem ressalvas — o domínio fica
+  independente de framework/banco. Resolve a issue **CRITICAL D1** apontada na análise.
+- **Custo aceito**: camada extra de mapeamento domínio↔entidade (ports/adapters + mapper).
+
+## Resumo de decisões (resolvidas)
+
+| # | Tema | Decisão adotada | Origem |
+|---|------|-----------------|--------|
+| 1 | Concluir/reabrir | `status` opcional no corpo do PATCH | replan |
+| 2 | Prioridade | int `1..3` → `1=ALTA, 2=MÉDIA, 3=BAIXA`; default 2 (MÉDIA) | replan |
+| 3 | Status | enum {PENDENTE, CONCLUIDA} | replan |
+| 4 | Arquitetura | Domínio puro separado das entidades JPA (ports/adapters + mapper) | analyze D1 |
+| 5 | Filtro de data | Igualdade por data única; intervalo fora de escopo | analyze F1 |
+| 6 | Default de prioridade | Registrado na spec (FR-010): MÉDIA quando omitido | analyze U1 |
+| 7 | Teste de 401 | Task de integração para request sem token | analyze E1 |

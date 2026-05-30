@@ -60,18 +60,19 @@ Gates derivados de `.specify/memory/constitution.md` (v1.0.0):
 
 | Princípio | Gate | Status |
 |-----------|------|--------|
-| I. DDD | Domínio modelado com Linguagem Ubíqua (Tarefa, Usuario, Status, Prioridade); 1 bounded context; acesso a infra via abstrações (repositórios) | ⚠ PASS com ressalva — ver Complexity Tracking (entidades JPA usadas como modelo de domínio) |
+| I. DDD | Domínio puro (POJOs sem framework) em `service/model`, com Linguagem Ubíqua (Tarefa, Usuario, Status, Prioridade); persistência isolada em entidades JPA (`service/repository/entity`) acessadas por portas (`*Repository`) + adaptadores; 1 bounded context | ✅ PASS |
 | II. TDD (NÃO NEGOCIÁVEL) | Todo código de produção precedido por teste que falha (Red-Green-Refactor); tasks ordenam teste antes da implementação | ✅ PASS |
 | III. Cobertura 100% (NÃO NEGOCIÁVEL) | JaCoCo com regra de 100% (linha + branch); exclusões explícitas e justificadas | ✅ PASS |
-| IV. SOLID | Contratos por interface (`ITodoListController`, `*Repository`, `*Service`/`impl`), Inversão de Dependência via Spring DI, ISP por DTOs e interfaces enxutas | ✅ PASS |
+| IV. SOLID | Contratos por interface (`ITodoListController`, portas `*Repository`, `*Service`/`impl`), Inversão de Dependência via Spring DI (serviços dependem de portas de domínio, não de JPA), ISP por DTOs e interfaces enxutas | ✅ PASS |
 
-**Conclusão inicial**: PASS com 1 ressalva justificada (Complexity Tracking). Nenhuma violação
-bloqueante. Reavaliar após Phase 1.
+**Conclusão inicial**: PASS, sem ressalvas. O domínio é mantido independente do framework de
+persistência (decisão D1 do replanejamento). Nenhuma violação. Reavaliar após Phase 1.
 
 **Reavaliação pós-Phase 1 (Design & Contracts)**: Os artefatos `data-model.md`, `contracts/openapi.yaml`
-e `quickstart.md` mantêm os gates. O domínio expõe regras de negócio em métodos do agregado
-(`concluir`, `reabrir`, transições de `Status`) e os filtros usam abstração de `Specification`.
-Sem novas violações. **PASS** (ressalva do princípio I permanece, já justificada).
+e `quickstart.md` mantêm os gates. O domínio puro expõe regras de negócio em métodos do agregado
+(`concluir`, `reabrir`, transições de `Status`); a persistência fica nos adaptadores de
+repositório e os filtros usam `Specification` sobre as entidades JPA na camada de infraestrutura.
+Sem violações. **PASS**.
 
 ## Project Structure
 
@@ -111,15 +112,29 @@ src/main/java/github/mlmatheus/todolist/
 │   ├── dto/
 │   │   ├── request/                      # CriarTarefaRequest, AtualizarTarefaRequest, filtro
 │   │   └── response/                     # TarefaResponse, ErroResponse, PageResponse
-│   ├── impl/                             # Implementações dos serviços
+│   ├── impl/                             # Implementações dos serviços (dependem das PORTAS)
 │   ├── mapper/
-│   │   └── TarefaMapper.java             # MapStruct entity <-> DTO
-│   ├── model/
-│   │   ├── Tarefa.java                   # Entidade/agregado Tarefa (+ Status, Prioridade)
-│   │   └── Usuario.java                  # Entidade Usuario
-│   ├── repository/
-│   │   ├── TarefaRepository.java         # Spring Data JPA + JpaSpecificationExecutor
-│   │   └── UsuarioRepository.java
+│   │   ├── TarefaMapper.java             # MapStruct: domínio <-> DTO
+│   │   └── TarefaPersistenceMapper.java  # MapStruct: domínio <-> entidade JPA
+│   ├── model/                            # DOMÍNIO PURO (sem anotações de framework)
+│   │   ├── Tarefa.java                   # Agregado Tarefa (regras: criar/concluir/reabrir/editar)
+│   │   ├── Usuario.java                  # Entidade de domínio Usuario
+│   │   ├── Status.java                   # Value object (PENDENTE, CONCLUIDA)
+│   │   └── Prioridade.java               # Value object (1=ALTA,2=MÉDIA,3=BAIXA)
+│   ├── repository/                       # PORTAS de domínio + adaptadores JPA (infra)
+│   │   ├── TarefaRepository.java         # Porta (interface em termos de domínio)
+│   │   ├── UsuarioRepository.java        # Porta
+│   │   ├── entity/
+│   │   │   ├── TarefaEntity.java         # Entidade JPA (persistência)
+│   │   │   └── UsuarioEntity.java        # Entidade JPA (persistência)
+│   │   ├── jpa/
+│   │   │   ├── TarefaJpaRepository.java  # Spring Data + JpaSpecificationExecutor<TarefaEntity>
+│   │   │   └── UsuarioJpaRepository.java
+│   │   ├── spec/
+│   │   │   └── TarefaSpecification.java   # CriteriaBuilder sobre TarefaEntity (filtros)
+│   │   └── impl/
+│   │       ├── TarefaRepositoryImpl.java  # Adaptador porta->JPA (+ persistence mapper)
+│   │       └── UsuarioRepositoryImpl.java
 │   ├── TarefaService.java                # Interface (contrato)
 │   ├── TodoListService.java              # Interface de orquestração
 │   └── UsuarioService.java               # Interface (resolução/provisão do usuário do token)
@@ -139,21 +154,26 @@ docker-compose.yml                        # app + mysql; profile "mysql" para ap
 pom.xml                                   # Maven, profiles: default + integration
 ```
 
-**Structure Decision**: Single project backend. A estrutura segue EXATAMENTE o layout
-fornecido pelo usuário (camadas `configuration`/`controller`/`infrastructure`/`service`),
-um estilo em camadas pragmático do ecossistema Spring. Os padrões táticos de DDD são mapeados
-sobre essa estrutura: `service/model` = modelo de domínio (agregado `Tarefa`, entidade
-`Usuario`, value objects `Status`/`Prioridade`), `service/repository` = portas de
-persistência, `service/*Service` + `service/impl` = serviços de domínio/aplicação. Ver
-Complexity Tracking para o tradeoff aceito sobre entidades JPA como modelo de domínio.
+**Structure Decision**: Single project backend, mantendo o layout de pastas fornecido pelo
+usuário (`configuration`/`controller`/`infrastructure`/`service`), mas com **separação estrita
+de domínio e persistência** (decisão D1 do replanejamento, para cumprir o Princípio I sem
+ressalvas): `service/model` = **domínio puro** (agregado `Tarefa`, `Usuario`, value objects
+`Status`/`Prioridade`) sem qualquer anotação de framework; `service/repository` = **portas** de
+domínio (`TarefaRepository`, `UsuarioRepository`) com **adaptadores** JPA em `repository/impl`,
+entidades de persistência em `repository/entity`, interfaces Spring Data em `repository/jpa` e
+specifications em `repository/spec`. Os serviços (`service/impl`) dependem das portas, nunca de
+JPA. Mapeamento domínio↔entidade via `TarefaPersistenceMapper` e domínio↔DTO via `TarefaMapper`.
 
 ## Complexity Tracking
 
-> Preenchido porque o Constitution Check tem 1 ressalva ao princípio I (DDD).
+> O Constitution Check passa sem violações. A separação domínio/persistência adiciona uma
+> camada de mapeamento (portas + adaptadores + persistence mapper), aceita deliberadamente
+> para honrar o Princípio I (DDD — domínio independente de framework). Não há desvios a
+> justificar nesta tabela.
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|--------------------------------------|
-| Entidades JPA (`Tarefa`, `Usuario`) usadas diretamente como modelo de domínio (acoplamento ao framework de persistência), em vez de um domínio puro separado das entidades de persistência | (1) O usuário especificou explicitamente o layout `service/model` com as entidades; (2) bounded context único, pequeno e CRUD-cêntrico; (3) regras de negócio ficam em métodos do agregado `Tarefa` (ex.: `concluir()`, `reabrir()`, validação de transição) + serviços de domínio, preservando SOLID e testabilidade | Um domínio puro + entidades de persistência separadas + mapeamento bidirecional adicionaria uma camada de tradução e duplicação de modelo desproporcional ao tamanho do contexto (YAGNI, princípio de simplicidade da constituição). A independência de infra exigida pelo DDD é preservada onde importa: serviços e controllers dependem de abstrações (`*Repository`, `*Service`) e a lógica de negócio não consulta infra diretamente |
+| — (nenhuma) | — | — |
 
 ## Notas de reconciliação spec ↔ contrato (decisões registradas)
 
@@ -168,8 +188,8 @@ revisão do usuário; detalhadas em `research.md`.
    Decisão: inteiro validado em `1..3` mapeado para o value object `Prioridade`
    (`1=ALTA, 2=MÉDIA, 3=BAIXA` — convenção P1/P2/P3, menor número = maior prioridade;
    default `2`=MÉDIA quando omitido). Mapeamento documentado e validado.
-3. **Filtro por `data_vencimento`**: parâmetro de igualdade por data (`LocalDate`) no `GET`,
-   coerente com a assumption da spec (filtro pela data de vencimento).
+3. **Filtro por `data_vencimento`**: parâmetro de **igualdade** por data única (`LocalDate`) no
+   `GET` (decisão F1 do replanejamento). Filtro por intervalo está fora do escopo desta versão.
 4. **Provisão do `Usuario`**: usuário é resolvido/provisionado a partir das claims do token
    Google (`sub`/`email`/`name`) no primeiro acesso; `usuario_id` da tarefa referencia esse
    registro. Garante o isolamento por proprietário (FR-002).

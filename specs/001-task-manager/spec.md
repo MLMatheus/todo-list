@@ -117,7 +117,7 @@ cada filtro e verificar que apenas as tarefas correspondentes são exibidas.
 2. **Given** tarefas com prioridades distintas, **When** o usuário filtra por prioridade
    "Alta", **Then** apenas as de prioridade "Alta" são exibidas.
 3. **Given** tarefas com datas de vencimento distintas, **When** o usuário filtra por uma
-   data (ou intervalo) específica, **Then** apenas as tarefas correspondentes são exibidas.
+   data específica, **Then** apenas as tarefas com aquela data de vencimento são exibidas.
 4. **Given** múltiplos filtros aplicados ao mesmo tempo, **When** o usuário combina status,
    prioridade e data, **Then** apenas as tarefas que satisfazem todos os critérios são
    exibidas.
@@ -161,7 +161,8 @@ cada filtro e verificar que apenas as tarefas correspondentes são exibidas.
 - **FR-009**: As operações de concluir e reabrir MUST ser idempotentes (repeti-las não gera
   erro nem estado inconsistente).
 - **FR-010**: O sistema MUST oferecer um conjunto definido de prioridades para a tarefa
-  (Baixa, Média, Alta).
+  (Baixa, Média, Alta). Se a prioridade não for informada no cadastro, o sistema MUST assumir
+  **Média** como padrão.
 - **FR-011**: O sistema MUST representar o status da tarefa por um conjunto definido de valores
   (Pendente, Concluída).
 - **FR-012**: O sistema MUST permitir filtrar a lista de tarefas por data de vencimento, por
@@ -212,7 +213,8 @@ cada filtro e verificar que apenas as tarefas correspondentes são exibidas.
   especificação explícita.
 - **Status**: o conjunto Pendente/Concluída é adotado como padrão, alinhado às ações descritas
   (cadastrar e concluir); estados intermediários (ex.: "Em andamento") ficam fora do escopo v1.
-- **"Filtrar por data"**: interpretado como filtro pela data de vencimento da tarefa (data
-  única ou intervalo), por ser a data mais relevante para o usuário gerenciar prazos.
+- **"Filtrar por data"**: interpretado como filtro por igualdade na data de vencimento da
+  tarefa (data única), por ser a data mais relevante para o usuário gerenciar prazos. Filtro
+  por intervalo de datas está fora do escopo desta versão.
 - **Plataforma e notificações**: lembretes, notificações e recorrência de tarefas estão fora
   do escopo desta feature.
