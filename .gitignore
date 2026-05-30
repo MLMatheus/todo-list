@@ -1,0 +1,33 @@
+# Claude Code / agentes
+# Skills e comandos do spec-kit PODEM ser versionados (são compartilháveis).
+# O que NÃO pode vazar fica abaixo:
+.claude/settings.local.json
+.claude/.credentials*
+.claude/*.local.*
+.claude/cache/
+.claude/logs/
+.claude/projects/
+
+# Segredos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.*
+
+# Sistema operacional
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*~
+
+# Logs / temporários
+*.log
+tmp/
+temp/
