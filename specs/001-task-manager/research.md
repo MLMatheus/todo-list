@@ -65,10 +65,12 @@ resolve as lacunas spec ↔ contrato e registra as práticas adotadas. Não rest
 ## D6 — Mapeamento de `prioridade` (int ↔ value object)
 
 - **Decisão**: `prioridade` é inteiro validado em `1..3`, mapeado para `Prioridade`
-  (`1=BAIXA, 2=MÉDIA, 3=ALTA`). Persistido como `INT`. Valores fora do intervalo → erro de
+  (`1=ALTA, 2=MÉDIA, 3=BAIXA` — convenção P1/P2/P3, menor número = maior prioridade).
+  Persistido como `INT`. Default `2`=MÉDIA quando omitido. Valores fora do intervalo → erro de
   validação 400.
 - **Rationale**: Concilia o `int` do brief com a semântica Baixa/Média/Alta da spec, mantendo um
-  value object de domínio com significado.
+  value object de domínio com significado. A ordenação P1/P2/P3 (menor = mais urgente) foi a
+  escolhida pelo usuário no replanejamento.
 - **Alternativa**: persistir o nome do enum como string (rejeitado — brief define `int`).
 
 ## D7 — Status no banco (string) ↔ domínio (enum)
@@ -145,5 +147,5 @@ resolve as lacunas spec ↔ contrato e registra as práticas adotadas. Não rest
 | # | Tema | Decisão adotada | Pode reverter para |
 |---|------|-----------------|--------------------|
 | 1 | Concluir/reabrir | `status` opcional no corpo do PATCH | sub-recurso `PATCH /tarefas/{id}/status` |
-| 2 | Prioridade | int `1..3` → BAIXA/MÉDIA/ALTA | outro intervalo/mapeamento |
+| 2 | Prioridade | int `1..3` → ALTA/MÉDIA/BAIXA (1=ALTA) | outro intervalo/mapeamento |
 | 3 | Status | enum {PENDENTE, CONCLUIDA} | incluir "EM_ANDAMENTO" (clarify pendente) |

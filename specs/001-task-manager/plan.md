@@ -166,7 +166,8 @@ revisão do usuário; detalhadas em `research.md`.
    parcial, sem criar novo endpoint. Idempotente conforme FR-009.
 2. **`prioridade` como `int`**: a spec descrevia Baixa/Média/Alta; o brief define `int`.
    Decisão: inteiro validado em `1..3` mapeado para o value object `Prioridade`
-   (`1=BAIXA, 2=MÉDIA, 3=ALTA`). Mapeamento documentado e validado.
+   (`1=ALTA, 2=MÉDIA, 3=BAIXA` — convenção P1/P2/P3, menor número = maior prioridade;
+   default `2`=MÉDIA quando omitido). Mapeamento documentado e validado.
 3. **Filtro por `data_vencimento`**: parâmetro de igualdade por data (`LocalDate`) no `GET`,
    coerente com a assumption da spec (filtro pela data de vencimento).
 4. **Provisão do `Usuario`**: usuário é resolvido/provisionado a partir das claims do token

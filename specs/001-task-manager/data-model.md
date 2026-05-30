@@ -41,7 +41,8 @@ transição de status).
 
 - **Status** (enum): `PENDENTE`, `CONCLUIDA`.
   - Persistido como `@Enumerated(EnumType.STRING)`.
-- **Prioridade** (VO sobre int): valores `1=BAIXA`, `2=MÉDIA`, `3=ALTA`.
+- **Prioridade** (VO sobre int): valores `1=ALTA`, `2=MÉDIA`, `3=BAIXA`
+  (convenção P1/P2/P3 — menor número = maior prioridade).
   - Conversão int ↔ enum validada; valor fora de `1..3` → erro de validação.
 
 ### Regras de validação (origem: spec FR-003..FR-016)

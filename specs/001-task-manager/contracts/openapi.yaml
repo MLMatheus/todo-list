@@ -62,7 +62,7 @@ paths:
           schema:
             type: integer
             enum: [1, 2, 3]
-            description: '1=BAIXA, 2=MÉDIA, 3=ALTA'
+            description: '1=ALTA, 2=MÉDIA, 3=BAIXA (menor número = maior prioridade)'
         - name: data_vencimento
           in: query
           required: false
@@ -173,7 +173,7 @@ components:
         prioridade:
           type: integer
           enum: [1, 2, 3]
-          description: '1=BAIXA, 2=MÉDIA, 3=ALTA (default 2 se ausente)'
+          description: '1=ALTA, 2=MÉDIA, 3=BAIXA (menor número = maior prioridade; default 2 se ausente)'
           nullable: true
         data_vencimento:
           type: string
