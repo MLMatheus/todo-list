@@ -1,4 +1,4 @@
-package github.mlmatheus.todolist.configuration;
+ package github.mlmatheus.todolist.configuration;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
