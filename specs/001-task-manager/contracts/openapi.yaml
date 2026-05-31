@@ -1,0 +1,258 @@
+openapi: 3.0.3
+info:
+  title: Todo List API
+  description: >-
+    API de gerenciamento de tarefas para usuários autenticados via Google.
+    Cada usuário só acessa e manipula as suas próprias tarefas.
+  version: v1
+servers:
+  - url: /todo-list/v1
+    description: Base URL do serviço
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Tarefas
+    description: Operações de gerenciamento de tarefas
+
+paths:
+  /tarefas:
+    post:
+      tags: [Tarefas]
+      operationId: criarTarefa
+      summary: Cria uma nova tarefa
+      description: >-
+        Cria uma tarefa para o usuário autenticado. O status inicial é sempre PENDENTE.
+        O título é obrigatório; descrição, prioridade e data de vencimento são opcionais.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarTarefaRequest'
+      responses:
+        '201':
+          description: Tarefa criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TarefaResponse'
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+    get:
+      tags: [Tarefas]
+      operationId: listarTarefas
+      summary: Lista tarefas do usuário com filtros e paginação
+      description: >-
+        Retorna uma lista paginada das tarefas do usuário autenticado. Filtros opcionais por
+        status, prioridade e data de vencimento podem ser combinados. Suporta paginação padrão
+        do Spring (page, size, sort).
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Status'
+        - name: prioridade
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [1, 2, 3]
+            description: '1=ALTA, 2=MÉDIA, 3=BAIXA (menor número = maior prioridade)'
+        - name: data_vencimento
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            description: Filtra pela data de vencimento (yyyy-MM-dd)
+        - name: page
+          in: query
+          required: false
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: size
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, default: 20 }
+        - name: sort
+          in: query
+          required: false
+          description: 'Campo e direção, ex.: data_vencimento,asc'
+          schema: { type: string }
+      responses:
+        '200':
+          description: Página de tarefas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageTarefaResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+
+  /tarefas/{tarefa_id}:
+    patch:
+      tags: [Tarefas]
+      operationId: atualizarTarefa
+      summary: Atualiza parcialmente uma tarefa (conteúdo e/ou status)
+      description: >-
+        Atualiza parcialmente a tarefa do usuário autenticado. Campos ausentes não são
+        alterados. Incluir "status" permite concluir (CONCLUIDA) ou reabrir (PENDENTE) a
+        tarefa de forma idempotente.
+      parameters:
+        - $ref: '#/components/parameters/TarefaId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtualizarTarefaRequest'
+      responses:
+        '200':
+          description: Tarefa atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TarefaResponse'
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+    delete:
+      tags: [Tarefas]
+      operationId: excluirTarefa
+      summary: Exclui uma tarefa
+      description: Remove permanentemente a tarefa do usuário autenticado.
+      parameters:
+        - $ref: '#/components/parameters/TarefaId'
+      responses:
+        '204':
+          description: Tarefa excluída (sem corpo)
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT (ID token) do Google. Validado por assinatura, expiração e audiência.
+
+  parameters:
+    TarefaId:
+      name: tarefa_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  schemas:
+    Status:
+      type: string
+      enum: [PENDENTE, CONCLUIDA]
+
+    CriarTarefaRequest:
+      type: object
+      required: [titulo]
+      properties:
+        titulo:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descricao:
+          type: string
+          maxLength: 2000
+          nullable: true
+        prioridade:
+          type: integer
+          enum: [1, 2, 3]
+          description: '1=ALTA, 2=MÉDIA, 3=BAIXA (menor número = maior prioridade; default 2 se ausente)'
+          nullable: true
+        data_vencimento:
+          type: string
+          format: date
+          nullable: true
+
+    AtualizarTarefaRequest:
+      type: object
+      description: Todos os campos são opcionais (atualização parcial); um corpo vazio é tratado como no-op (retorna a tarefa inalterada).
+      properties:
+        titulo:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descricao:
+          type: string
+          maxLength: 2000
+          nullable: true
+        prioridade:
+          type: integer
+          enum: [1, 2, 3]
+        data_vencimento:
+          type: string
+          format: date
+          nullable: true
+        status:
+          $ref: '#/components/schemas/Status'
+
+    TarefaResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        titulo: { type: string }
+        descricao: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/Status' }
+        prioridade: { type: integer, enum: [1, 2, 3] }
+        data_vencimento: { type: string, format: date, nullable: true }
+
+    PageTarefaResponse:
+      type: object
+      description: Página no formato padrão do Spring Data (Pageable)
+      properties:
+        content:
+          type: array
+          items: { $ref: '#/components/schemas/TarefaResponse' }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+        number: { type: integer }
+        size: { type: integer }
+
+    ErroResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          description: 'yyyy-MM-dd HH:mm:ss.SSS'
+        http_status: { type: integer }
+        error_message: { type: string }
+        erros:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+          example:
+            titulo: ["O título é obrigatório"]
+
+  responses:
+    ErroValidacao:
+      description: Erro de validação
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErroResponse' }
+    NaoAutenticado:
+      description: Token ausente ou inválido
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErroResponse' }
+    NaoEncontrado:
+      description: Tarefa inexistente ou não pertencente ao usuário
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErroResponse' }

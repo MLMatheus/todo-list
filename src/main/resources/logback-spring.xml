@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="instanceId" source="app.instance-id" defaultValue="todo-list-local"/>
+
+    <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <pattern>
+                    <pattern>
+                        {
+                          "id_usuario": "%mdc{id_usuario:-}",
+                          "request_id": "%mdc{request_id:-}",
+                          "datetime": "%d{yyyy-MM-dd HH:mm:ss.SSS}",
+                          "log_level": "%level",
+                          "message": "%message",
+                          "instance_id": "${instanceId}"
+                        }
+                    </pattern>
+                </pattern>
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="JSON"/>
+    </root>
+</configuration>

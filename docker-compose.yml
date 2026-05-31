@@ -1,0 +1,41 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: todolist-mysql
+    profiles: ["mysql", "full"]
+    environment:
+      MYSQL_DATABASE: todolist
+      MYSQL_USER: todo
+      MYSQL_PASSWORD: todo
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "todo", "-ptodo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todolist-app
+    profiles: ["full"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/todolist
+      DB_USERNAME: todo
+      DB_PASSWORD: todo
+      GOOGLE_ISSUER_URI: https://accounts.google.com
+      GOOGLE_AUDIENCE: ${GOOGLE_AUDIENCE:-changeme.apps.googleusercontent.com}
+      INSTANCE_ID: todo-list-1
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql-data:

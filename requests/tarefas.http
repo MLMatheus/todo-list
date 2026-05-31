@@ -1,0 +1,60 @@
+# Requests httpyac (VS Code) — Gerenciador de Tarefas
+# Defina o token do Google em uma variável de ambiente httpyac ou .env: GOOGLE_ID_TOKEN
+
+@base = http://localhost:8080/todo-list/v1
+@token = {{$dotenv GOOGLE_ID_TOKEN}}
+@tarefaId = SUBSTITUA_PELO_ID
+
+### Criar tarefa
+# @name criar
+POST {{base}}/tarefas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titulo": "Estudar DDD",
+  "descricao": "Capítulo de agregados",
+  "prioridade": 1,
+  "data_vencimento": "2026-06-10"
+}
+
+### Listar tarefas (com filtros e paginação)
+GET {{base}}/tarefas?status=PENDENTE&prioridade=1&data_vencimento=2026-06-10&page=0&size=20&sort=data_vencimento,asc
+Authorization: Bearer {{token}}
+
+### Listar todas (sem filtros)
+GET {{base}}/tarefas
+Authorization: Bearer {{token}}
+
+### Concluir tarefa (status no PATCH)
+PATCH {{base}}/tarefas/{{tarefaId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "status": "CONCLUIDA" }
+
+### Reabrir tarefa
+PATCH {{base}}/tarefas/{{tarefaId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "status": "PENDENTE" }
+
+### Editar conteúdo da tarefa
+PATCH {{base}}/tarefas/{{tarefaId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titulo": "Estudar DDD a fundo",
+  "descricao": "Agregados e value objects",
+  "prioridade": 2,
+  "data_vencimento": "2026-06-15"
+}
+
+### Excluir tarefa
+DELETE {{base}}/tarefas/{{tarefaId}}
+Authorization: Bearer {{token}}
+
+### (negativo) Sem token -> 401
+GET {{base}}/tarefas
