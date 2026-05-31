@@ -71,6 +71,58 @@ mvn verify -P integration
 > anteriores (docker-java antigo) falham o handshake com a API do Docker 29 (mínimo API 1.44)
 > com `Status 400 / Could not find a valid Docker environment`. Já está resolvido aqui.
 
+## Autenticação — gerar um token do Google para testes
+
+> **Os testes automatizados NÃO precisam de token real.** Os testes de integração
+> (Testcontainers) usam um `JwtDecoder` mockado + o post-processor `jwt()` do Spring Security,
+> então `mvn verify` e `mvn verify -P integration` rodam sem credenciais do Google. Você só
+> precisa de um token real para **chamar a API em execução** (Swagger UI, arquivos `.http`,
+> smoke manual).
+
+O serviço valida o **ID token (JWT) do Google** em cada request: assinatura (via JWKS do
+Google), `iss` = `https://accounts.google.com`, expiração e **audiência** (`aud`). Portanto o
+`aud` do token **precisa ser igual** ao `GOOGLE_AUDIENCE` configurado na aplicação.
+
+### Pré-requisito (uma vez)
+
+No [Google Cloud Console](https://console.cloud.google.com/apis/credentials), crie uma
+credencial **OAuth 2.0 Client ID** do tipo *Web application*. Guarde o **Client ID** e o
+**Client secret**. O `aud` dos tokens gerados será esse Client ID — use-o como `GOOGLE_AUDIENCE`.
+
+### Opção A — OAuth 2.0 Playground (recomendado)
+
+1. No Console, adicione `https://developers.google.com/oauthplayground` como **Authorized
+   redirect URI** do seu Client ID.
+2. Abra o [OAuth 2.0 Playground](https://developers.google.com/oauthplayground/).
+3. Clique na engrenagem (⚙, canto superior direito) → marque **"Use your own OAuth
+   credentials"** → preencha o **Client ID** e **Client secret**.
+4. Em *Step 1*, informe os escopos `openid email profile` e clique **Authorize APIs**; faça
+   login e consinta.
+5. Em *Step 2*, clique **Exchange authorization code for tokens**.
+6. Copie o campo **`id_token`** (não o `access_token`). É um JWT válido por ~1h, com `email` e
+   `name` nas claims.
+
+### Opção B — gcloud (rápido para dev local)
+
+```bash
+gcloud auth print-identity-token
+```
+
+Gera um ID token do Google, mas o `aud` é o client do gcloud (não o seu). Para usá-lo, ajuste
+`GOOGLE_AUDIENCE` para o `aud` desse token (decodifique em <https://jwt.io> para conferir).
+Útil só para validar o fluxo localmente.
+
+### Usar o token
+
+- **Swagger UI**: botão **Authorize** → cole o token (esquema *bearer*).
+- **Arquivos `.http` (httpyac)**: crie um `.env` na raiz com `GOOGLE_ID_TOKEN=<id_token>`
+  (já referenciado em `requests/tarefas.http` via `{{$dotenv GOOGLE_ID_TOKEN}}`).
+- **curl / qualquer cliente**: header `Authorization: Bearer <id_token>`.
+
+> ⚠️ O token expira em ~1h — gere outro quando receber `401`. Confirme que `GOOGLE_AUDIENCE`
+> (na app) é igual ao `aud` do token. A validação baixa as JWKS do Google, então é preciso
+> conexão de rede.
+
 ## Documentação da API
 
 - Swagger UI: `http://localhost:8080/todo-list/v1/swagger-ui.html`
