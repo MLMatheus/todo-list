@@ -10,7 +10,8 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.mysql.MySQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
 /** Base dos testes de integração: sobe um MySQL real (singleton) e expõe MockMvc. */
 @SpringBootTest
@@ -18,7 +19,7 @@ import org.testcontainers.containers.MySQLContainer;
 @Tag("integration")
 public abstract class AbstractIntegrationTest {
 
-    static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4")
+    static final MySQLContainer MYSQL = new MySQLContainer(DockerImageName.parse("mysql:8.4"))
             .withDatabaseName("todolist")
             .withUsername("todo")
             .withPassword("todo");

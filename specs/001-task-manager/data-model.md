@@ -86,7 +86,7 @@ Entidades anotadas, espelhando o domínio. **Nenhuma regra de negócio aqui** �
 
 | Campo | Coluna (MySQL) | Restrições |
 |-------|----------------|------------|
-| id | `id CHAR(36)` | PK, NOT NULL |
+| id | `id VARCHAR(36)` | PK, NOT NULL |
 | nome | `nome VARCHAR(255)` | NOT NULL |
 | email | `email VARCHAR(320)` | NOT NULL, UNIQUE |
 
@@ -94,7 +94,7 @@ Entidades anotadas, espelhando o domínio. **Nenhuma regra de negócio aqui** �
 
 | Campo | Coluna (MySQL) | Restrições |
 |-------|----------------|------------|
-| id | `id CHAR(36)` | PK, NOT NULL |
+| id | `id VARCHAR(36)` | PK, NOT NULL |
 | titulo | `titulo VARCHAR(150)` | NOT NULL |
 | descricao | `descricao VARCHAR(2000)` | NULL |
 | status | `status VARCHAR(20)` | NOT NULL (`@Enumerated(STRING)`) |
@@ -102,7 +102,7 @@ Entidades anotadas, espelhando o domínio. **Nenhuma regra de negócio aqui** �
 | dataVencimento | `data_vencimento DATE` | NULL |
 | dataCriacao | `data_criacao DATETIME(3)` | NOT NULL |
 | dataAtualizacao | `data_atualizacao DATETIME(3)` | NOT NULL |
-| usuarioId | `usuario_id CHAR(36)` | NOT NULL, FK → usuario(id) |
+| usuarioId | `usuario_id VARCHAR(36)` | NOT NULL, FK → usuario(id) |
 
 ### Índices e integridade (migrations Flyway)
 

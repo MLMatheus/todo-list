@@ -67,9 +67,9 @@ mvn clean verify
 mvn verify -P integration
 ```
 
-> No Windows com Docker Desktop, se o Testcontainers não encontrar o Docker, exporte
-> `DOCKER_HOST` apontando para o named pipe do engine ativo
-> (ex.: `npipe:////./pipe/dockerDesktopLinuxEngine`).
+> **Docker Engine 29+**: requer **Testcontainers ≥ 2.0.2** (este projeto usa 2.0.5). Versões
+> anteriores (docker-java antigo) falham o handshake com a API do Docker 29 (mínimo API 1.44)
+> com `Status 400 / Could not find a valid Docker environment`. Já está resolvido aqui.
 
 ## Documentação da API
 

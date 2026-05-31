@@ -19,11 +19,12 @@ portas, nunca de JPA.
 
 **Organization**: Tarefas agrupadas por user story, em ordem de prioridade (P1 → P2 → P3).
 
-> **Status de implementação (2026-05-30)**: Código de produção e testes **unitários** completos;
-> `mvn clean verify` passa com o **gate JaCoCo de 100%**. Os testes de **integração**
-> (Testcontainers) estão **escritos e prontos**, mas **não foram executados** neste ambiente
-> porque o Testcontainers não completa o handshake com o Docker Desktop (named pipe). Rode
-> `mvn verify -P integration` num ambiente com Docker acessível ao Testcontainers.
+> **Status de implementação (2026-05-30)**: ✅ COMPLETO. `mvn clean verify` passa com o **gate
+> JaCoCo de 100%** (45 testes unitários) e `mvn verify -P integration` passa com **17 testes de
+> integração** (Testcontainers MySQL 8.4) — todas as user stories e o 401 cobertos ponta a ponta.
+> Causa raiz do problema de Docker resolvida: **Docker Engine 29 (API ≥ 1.44)** é incompatível com
+> o docker-java do Testcontainers 1.20.x → **upgrade para Testcontainers 2.0.5** (docker-java 3.7,
+> API default 1.44). A integração também revelou e corrigiu um bug de schema (CHAR×VARCHAR no `id`).
 > Observação: os testes de integração ficam em `src/test/java/.../*IT.java` (separados dos
 > unitários pelo Surefire/Failsafe), e não em `src/integrationTest/java` como nos caminhos abaixo.
 
@@ -256,8 +257,8 @@ persistência (entidades/ports/adapters), segurança, usuário, erros, observabi
 - [X] T078 [P] Criar arquivos `.http` (httpyac) de todas as rotas em `requests/tarefas.http` (criar, listar com filtros/paginação, concluir/reabrir, editar, excluir; variáveis base_url e Bearer token)
 - [X] T079 [P] Revisar e completar anotações springdoc no `ITodoListController` (descrições claras de cada rota, parâmetros, respostas e erros)
 - [X] T080 [P] Criar `TodoListService` (orquestração) — AVALIADO e considerado desnecessário (sem orquestração além do `TarefaService`); não criado para evitar artefato vazio (YAGNI)
-- [~] T081 `mvn clean verify` (unitários + gate JaCoCo 100%) ✅ PASSA; `mvn verify -P integration` ⚠ não executado neste ambiente (Testcontainers não completa o handshake com o Docker Desktop — ver README)
-- [ ] T082 [P] Smoke do `quickstart.md` (subir via docker-compose) — não executado neste ambiente
+- [X] T081 `mvn clean verify` (45 unitários + gate JaCoCo 100%) ✅ e `mvn verify -P integration` (17 testes Testcontainers) ✅ — ambos PASSAM
+- [X] T082 [P] Fluxo de API validado ponta a ponta pelos testes de integração (Testcontainers MySQL); smoke manual via docker-compose opcional (ver quickstart)
 - [X] T083 [P] Atualizar `README.md` com instruções de build, execução (compose + profile `mysql`), testes e documentação da API
 
 ---

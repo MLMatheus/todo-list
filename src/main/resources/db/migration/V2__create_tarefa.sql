@@ -1,5 +1,5 @@
 CREATE TABLE tarefa (
-    id               CHAR(36)      NOT NULL,
+    id               VARCHAR(36)   NOT NULL,
     titulo           VARCHAR(150)  NOT NULL,
     descricao        VARCHAR(2000),
     status           VARCHAR(20)   NOT NULL,
@@ -7,7 +7,7 @@ CREATE TABLE tarefa (
     data_vencimento  DATE,
     data_criacao     DATETIME(3)   NOT NULL,
     data_atualizacao DATETIME(3)   NOT NULL,
-    usuario_id       CHAR(36)      NOT NULL,
+    usuario_id       VARCHAR(36)   NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_tarefa_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id),
     INDEX idx_tarefa_usuario (usuario_id),
