@@ -1,6 +1,7 @@
 package github.mlmatheus.todolist.infrastructure.exception.handler;
 
 import github.mlmatheus.todolist.infrastructure.exception.TarefaNaoEncontradaException;
+import github.mlmatheus.todolist.infrastructure.exception.TokenInvalidoException;
 import github.mlmatheus.todolist.infrastructure.exception.ValidacaoDominioException;
 import github.mlmatheus.todolist.infrastructure.util.DateFormatterUtils;
 import github.mlmatheus.todolist.service.dto.response.ErroResponse;
@@ -11,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /** Tratamento padronizado de erros da API. */
+@Slf4j
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
@@ -47,8 +50,14 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), null);
     }
 
+    @ExceptionHandler(TokenInvalidoException.class)
+    public ResponseEntity<ErroResponse> handleTokenInvalido(TokenInvalidoException ex) {
+        return build(HttpStatus.UNAUTHORIZED, ex.getMessage(), null);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponse> handleInterno(Exception ex) {
+        log.error("Erro interno não tratado", ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno do servidor", null);
     }
 

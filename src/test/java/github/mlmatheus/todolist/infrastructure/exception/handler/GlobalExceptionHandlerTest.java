@@ -3,6 +3,7 @@ package github.mlmatheus.todolist.infrastructure.exception.handler;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import github.mlmatheus.todolist.infrastructure.exception.TarefaNaoEncontradaException;
+import github.mlmatheus.todolist.infrastructure.exception.TokenInvalidoException;
 import github.mlmatheus.todolist.infrastructure.exception.ValidacaoDominioException;
 import github.mlmatheus.todolist.service.dto.response.ErroResponse;
 import java.lang.reflect.Method;
@@ -73,5 +74,14 @@ class GlobalExceptionHandlerTest {
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(resp.getBody().errorMessage()).isEqualTo("Erro interno do servidor");
+    }
+
+    @Test
+    void mapeiaTokenInvalidoCom401() {
+        ResponseEntity<ErroResponse> resp =
+                handler.handleTokenInvalido(new TokenInvalidoException("Token sem a claim 'email'"));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(resp.getBody().httpStatus()).isEqualTo(401);
     }
 }

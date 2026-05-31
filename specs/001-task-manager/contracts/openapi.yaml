@@ -182,7 +182,7 @@ components:
 
     AtualizarTarefaRequest:
       type: object
-      description: Todos os campos são opcionais (atualização parcial). Ao menos um deve ser informado.
+      description: Todos os campos são opcionais (atualização parcial); um corpo vazio é tratado como no-op (retorna a tarefa inalterada).
       properties:
         titulo:
           type: string

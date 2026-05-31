@@ -2,6 +2,7 @@ package github.mlmatheus.todolist.controller;
 
 import github.mlmatheus.todolist.controller.contract.ITodoListController;
 import github.mlmatheus.todolist.infrastructure.constants.Log;
+import github.mlmatheus.todolist.infrastructure.exception.TokenInvalidoException;
 import github.mlmatheus.todolist.service.TarefaService;
 import github.mlmatheus.todolist.service.UsuarioService;
 import github.mlmatheus.todolist.service.dto.request.AtualizarTarefaRequest;
@@ -18,6 +19,7 @@ import org.slf4j.MDC;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -53,8 +55,13 @@ public class TodoListController implements ITodoListController {
     }
 
     private String usuarioId(Jwt jwt) {
-        Usuario usuario = usuarioService.resolver(
-                jwt.getSubject(), jwt.getClaimAsString("email"), jwt.getClaimAsString("name"));
+        String email = jwt.getClaimAsString("email");
+        if (!StringUtils.hasText(email)) {
+            throw new TokenInvalidoException("Token sem a claim 'email'");
+        }
+        String nome = jwt.getClaimAsString("name");
+        String nomeResolvido = StringUtils.hasText(nome) ? nome : email;
+        Usuario usuario = usuarioService.resolver(jwt.getSubject(), email, nomeResolvido);
         MDC.put(Log.ID_USUARIO, usuario.getId());
         return usuario.getId();
     }

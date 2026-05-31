@@ -1,11 +1,13 @@
 package github.mlmatheus.todolist.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import github.mlmatheus.todolist.infrastructure.exception.TokenInvalidoException;
 import github.mlmatheus.todolist.service.TarefaService;
 import github.mlmatheus.todolist.service.UsuarioService;
 import github.mlmatheus.todolist.service.dto.request.AtualizarTarefaRequest;
@@ -106,5 +108,29 @@ class TodoListControllerTest {
         controller.excluir("t1", jwt);
 
         verify(tarefaService).excluir("u1", "t1");
+    }
+
+    @Test
+    void rejeitaTokenSemEmailCom401() {
+        Jwt semEmail = Jwt.withTokenValue("token").header("alg", "none")
+                .subject("sub1").claim("name", "Ana").build();
+        CriarTarefaRequest req = new CriarTarefaRequest("Tarefa", null, null, null);
+
+        assertThatThrownBy(() -> controller.criar(req, semEmail))
+                .isInstanceOf(TokenInvalidoException.class);
+    }
+
+    @Test
+    void usaEmailComoNomeQuandoNameAusente() {
+        Jwt semNome = Jwt.withTokenValue("token").header("alg", "none")
+                .subject("sub1").claim("email", "ana@x.com").build();
+        CriarTarefaRequest req = new CriarTarefaRequest("Tarefa", null, null, null);
+        Tarefa tarefa = umaTarefa();
+        when(usuarioService.resolver("sub1", "ana@x.com", "ana@x.com")).thenReturn(usuario);
+        when(tarefaService.criar("u1", req)).thenReturn(tarefa);
+        when(mapper.toResponse(tarefa)).thenReturn(umResponse);
+
+        assertThat(controller.criar(req, semNome)).isEqualTo(umResponse);
+        verify(usuarioService).resolver("sub1", "ana@x.com", "ana@x.com");
     }
 }
