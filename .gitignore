@@ -31,3 +31,13 @@ Desktop.ini
 *.log
 tmp/
 temp/
+
+# Java / Maven
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/
+!.mvn/wrapper/
+build/
+*.iml
